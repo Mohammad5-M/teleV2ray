@@ -2,6 +2,7 @@ import json
 import re
 import base64
 import yaml
+import datetime
 
 
 def load_config(path='config.yaml'):
@@ -51,6 +52,28 @@ def conf_ch(add: str,
     r = {"add": add, "aid": aid, "alpn": alpn, "host": host, "id": id, "net": net,
          "path": path, "port": port, "ps": ps, "scy": scy, "sni": sni, "tls": tls, "type": type, "v": v}
     return f"vmess://{encode_utf8(r)}"
+
+
+alternative = [
+    (1024 ** 5, ' پتابایت'),
+    (1024 ** 4, ' ترابایت'),
+    (1024 ** 3, ' گیگابایت'),
+    (1024 ** 2, ' مگابایت'),
+    (1024 ** 1, ' کیلوبایت'),
+    (1024 ** 0, (' بایت', ' بایت')),
+]
+
+
+def time_in_defult_days_milliseconds(days=30):
+    presentDate = datetime.datetime.now()
+    ddd = datetime.timedelta(days=days)+presentDate
+    ddd = ddd.timestamp()*1000.0
+    return ddd.__int__()
+
+
+def milliseconds_to_day_from_now(millisec):
+    presentDate = datetime.datetime.now()
+    return (datetime.datetime.fromtimestamp(millisec/1000.0) - presentDate).days
 
 
 if __name__ == "__main__":

@@ -41,9 +41,11 @@ def yes_or_no_markup(in_num):
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(InlineKeyboardButton(
-        "بله", callback_data=f"tryes_{in_num}"))
+        "کانفیگ برای همراه اول", callback_data=f"tryes_{in_num}_hamrah"))
     markup.add(InlineKeyboardButton(
-        "خیر", callback_data="trno_00"))
+        "کانفیگ برای ایرانسل", callback_data=f"tryes_{in_num}_iran"))
+    markup.add(InlineKeyboardButton(
+        "انصراف", callback_data="trno_00"))
 
     return markup
 
@@ -92,6 +94,8 @@ def Download_link_markup():
         "V2rayN for Windows", url="https://github.com/2dust/v2rayN/releases"))
     markup.add(InlineKeyboardButton(
         "Fair for Mac OS", url="https://apps.apple.com/us/app/fair-vpn/id1533873488?platform=mac"))
+    markup.add(InlineKeyboardButton(
+        "NapsternetV for IOS", url="https://apps.apple.com/us/app/napsternetv/id1629465476"))
 
     return markup
 

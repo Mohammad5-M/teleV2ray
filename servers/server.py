@@ -4,6 +4,7 @@ from datetime import datetime
 from servers import gen_user_config_vless_ws, gen_data_for_req
 import uuid
 from models import *
+from utils import time_in_defult_days_milliseconds
 
 
 class ServerClass:
@@ -97,13 +98,14 @@ class ServerClass:
             if d == None:
                 return None, None
         random_client_id = str(uuid.uuid4())
-        email = f"{random_client_id}@{telegram_id}"
+        # f2828282-1cb1-46ab-b5b5-18ba510dd1ef@407599569.com
+        email = f"{random_client_id}@{telegram_id}abc.com".replace("-", "")
         # port = self.db.generate_random_port(self.serv)
         print(port)
         creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         user_config = gen_data_for_req(
-            port, random_client_id, None, email, None, traffic_limit)
+            port, random_client_id, None, email, None, traffic_limit, str(time_in_defult_days_milliseconds()))
         print(user_config)
 
         headers = {"Content-Type": "application/json"}

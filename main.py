@@ -3,11 +3,11 @@ import logging
 import telebot
 import os
 import ssl
-from datetime import datetime
+from datetime import datetime, timedelta
 from aiohttp import web
 from telebot import asyncio_helper
 from servers import ServerClass
-from utils import load_config, serv_to_table_str
+from utils import load_config, serv_to_table_str, alternative, milliseconds_to_day_from_now
 from telebot.async_telebot import AsyncTeleBot
 from hurry.filesize import size
 from caching import (get_doadmin, set_doadmin_addAmount,
@@ -44,13 +44,18 @@ db = SqliteDB()
 s = ServerClass(db, "local", "hosr_add")
 
 # webhook data
-WEBHOOK_HOST = 'teBotvV2ray.salehmast.repl.co'
+WEBHOOK_HOST = 'MammothYellowishArea.salehmast.repl.co'
 WEBHOOK_PORT = 443  # 443, 80, 88 or 8443 (port need to be 'open')
 WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
 # WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Path to the ssl certificate
 # WEBHOOK_SSL_PRIV = './webhook_pkey.pem'  # Path to the ssl private key
 WEBHOOK_URL_BASE = "https://{}:{}".format(WEBHOOK_HOST, WEBHOOK_PORT)
 WEBHOOK_URL_PATH = "/{}/".format(config["TGToken"])
+
+if db.get_telegram_ammunt(config["Admin_id"]) is None:
+    db.add_row("users",
+               (config["Admin_id"], False, None,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0, True))
 
 
 async def hello(request):
@@ -146,7 +151,7 @@ class CachingCommandNew(telebot.asyncio_filters.AdvancedCustomFilter):
 # this is admin area #
 ######################
 
-@bot.message_handler(func=lambda message: message.text == "بازگشت به پنل ادمین")
+@bot.message_handler(is_admin=True, func=lambda message: message.text == "بازگشت به پنل ادمین")
 @bot.message_handler(is_admin=True, commands=['start'])
 async def start_admin(message):
     await bot.send_message(message.chat.id,
@@ -202,7 +207,7 @@ async def reply_markup_static(message):
 async def callback_query_back_to_home(message):
     await bot.send_message(message.chat.id,
                            'You are admin of this bot!',
-                           reply_markup=start_markup())
+                           reply_markup=start_markup(True))
 
 
 @bot.callback_query_handler(is_admin_call=True,
@@ -368,11 +373,11 @@ async def send_welcome(message):
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0, False))
         await bot.send_message(message.chat.id,
                                text_start.format(config["RobotName"]),
-                               reply_markup=start_markup(is_admin))
+                               reply_markup=start_markup(bool(is_admin)))
         return
     await bot.send_message(message.chat.id,
                            text_start_2,
-                           reply_markup=start_markup(is_admin))
+                           reply_markup=start_markup(bool(is_admin)))
 
 
 @bot.message_handler(func=lambda message: message.text == "خرید کانفیگ")
@@ -499,11 +504,16 @@ async def callback_query_tryes(call):
     elif call_data[1] == "100":
         traffic_limit = 107374182400
 
+    if call_data[2] == "hamrah":
+        port = 2083
+    elif call_data[2] == "iran":
+        port = 443
+
     if s.CHECK_POINT is False:
         return
     code, resp = s.gen_url_same_port(call.from_user.id,
                                      traffic_limit=traffic_limit,
-                                     port=443)
+                                     port=port)
     if code == None and resp == None:
         await bot.delete_message(chat_id=call.from_user.id,
                                  message_id=call.message.id)
@@ -516,7 +526,7 @@ async def callback_query_tryes(call):
     if code:
         print(resp)
         if config['CDN_ADD'] != None:
-            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,resp['alterId'],cdn_add=config['CDN_ADD'])}```\n"
+            msg = f"```{db.link_gen_cdn(resp,s.host_add,resp['alterId'],cdn_add=config['CDN_ADD'])}```\n"
         else:
             msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,resp['alterId'])}```\n"
 
@@ -536,7 +546,7 @@ async def callback_query_trno(call):
     await bot.edit_message_text(chat_id=call.from_user.id,
                                 message_id=call.message.id,
                                 text=text_start,
-                                reply_markup=start_markup())
+                                reply_markup=start_markup(False))
 
 
 @bot.message_handler(func=lambda message: message.text == "کیف پول")
@@ -600,7 +610,8 @@ async def callback_query_GMS(call):
     call_data = str(call.data).split("_")
     # if s.CHECK_POINT is False:
     #     return
-    checck = s.get_user_data_cdn(f"{call_data[1]}@{call.from_user.id}")
+    checck = s.get_user_data_cdn(
+        f"{call_data[1]}@{call.from_user.id}abc.com".replace("-", ""))
 
     if checck is None:
         await bot.answer_callback_query(call.id, "اطلاعات یافت نشد")
@@ -609,17 +620,22 @@ async def callback_query_GMS(call):
     mandeh = checck[7] - (checck[4] + checck[5])
     masrafi = (checck[4] + checck[5])
     tarikh = checck[6]
+    timedelta()
     vasiat = checck[2]
     koll = checck[7]
-    if tarikh == 0:
-        tarikh = "نامحدود"
+
     if vasiat == 0:
         vasiat = "غیر فعال"
     elif vasiat == 1:
         vasiat = "فعال"
 
-    # text = f"حساب با ادرس: \n{checck[3]}\n وضعیت: {vasiat}\n دانلود: {checck[5]} اپلود: {checck[4]} حجم کل: {checck[7]} مانده: {mandeh}\n تاریخ انقضا: {tarikh} "
-    text = service_call_text.format(vasiat, masrafi, mandeh, koll, tarikh)
+    if tarikh == 0:
+        tarikh = "نامحدود"
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
+    else:
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
     await bot.answer_callback_query(call.id, "ok")
     await bot.send_message(call.from_user.id, text)
 
@@ -728,7 +744,7 @@ async def addserver_admin(message):
 @ bot.message_handler(is_admin=True,
                       caching_command_new=["editserver"],
                       func=lambda message: True)
-async def editserver_admin(message):  # TODO ...
+async def editserver_admin(message):
     print("is here edit sever")
     res = get_doadmin_new(message.from_user.id, )
     print(res)

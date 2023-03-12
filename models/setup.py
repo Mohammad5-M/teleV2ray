@@ -122,7 +122,7 @@ class SqliteDB:
 
         print(uuid, port, protocol, network, security, Host, path, serverName)
         if protocol == "vless" or protocol == "trojan":
-            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&security={security}&path={path}&host={Host}&sni={Host}&alpn=http/1.1#Config {Host}"
+            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&security={security}&path={path}&host={Host}&sni={Host}#Config {Host}"
             return one
         elif protocol == "vmess":
             if network == "grpc":
