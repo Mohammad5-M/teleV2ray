@@ -3,27 +3,27 @@ import logging
 import telebot
 import os
 import ssl
+from datetime import datetime
 from aiohttp import web
 from telebot import asyncio_helper
-from servers.server import ServerClass
+from servers import ServerClass
 from utils import load_config, serv_to_table_str
 from telebot.async_telebot import AsyncTeleBot
-from datetime import datetime
 from hurry.filesize import size
-from caching.redis_file import (get_doadmin, set_doadmin_addAmount,
-                                update_doadmin, set_doadmin_editServer,
-                                set_doadmin_send_msg_to_all,
-                                set_doadmin_addServer, clear_all_command,
-                                set_doadmin_send_msg, get_doadmin_new,
-                                update_doadmin_new, set_doadmin_edit_admin_stats)
+from caching import (get_doadmin, set_doadmin_addAmount,
+                     update_doadmin, set_doadmin_editServer,
+                     set_doadmin_send_msg_to_all,
+                     set_doadmin_addServer, clear_all_command,
+                     set_doadmin_send_msg, get_doadmin_new,
+                     update_doadmin_new, set_doadmin_edit_admin_stats)
 
-from models.setup import SqliteDB
-from inlinebutton.func import (start_markup, conf_markup, yes_or_no_markup,
-                               Download_link_markup, Admin_start_markup,
-                               send_msg_too_all, myservice_reply,
-                               back_to_home_admin, reset_or_add_admin,
-                               send_msg_sure)
-from text import text_start, text_start_2, test_my_servicee
+from models import SqliteDB
+from inlinebutton import (start_markup, conf_markup, yes_or_no_markup,
+                          Download_link_markup, Admin_start_markup,
+                          send_msg_too_all, myservice_reply,
+                          back_to_home_admin, reset_or_add_admin,
+                          send_msg_sure)
+from text import text_start, text_start_2, test_my_servicee, service_call_text
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)  # Outputs debug messages to console.
@@ -54,10 +54,19 @@ WEBHOOK_URL_PATH = "/{}/".format(config["TGToken"])
 
 
 async def hello(request):
+    # Remove webhook, it fails sometimes the set if there is a previous webhook
+    logger.info('Starting up: removing old webhook')
+    await bot.remove_webhook()
+    # Set webhook
+    logger.info('Starting up: setting webhook')
+    await bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH, )
+    # certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
     return web.Response(text="Hello, world")
 
-
 # Process webhook calls
+
+
 async def handle(request):
     print("req ...")
     if request.match_info.get('token') == bot.token:
@@ -79,13 +88,6 @@ async def shutdown(app):
 
 
 async def setup():
-    # Remove webhook, it fails sometimes the set if there is a previous webhook
-    logger.info('Starting up: removing old webhook')
-    await bot.remove_webhook()
-    # Set webhook
-    logger.info('Starting up: setting webhook')
-    await bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH, )
-    # certificate=open(WEBHOOK_SSL_CERT, 'r'))
     app = web.Application()
     app.add_routes([web.get('/', hello)])
 
@@ -144,7 +146,7 @@ class CachingCommandNew(telebot.asyncio_filters.AdvancedCustomFilter):
 # this is admin area #
 ######################
 
-
+@bot.message_handler(func=lambda message: message.text == "بازگشت به پنل ادمین")
 @bot.message_handler(is_admin=True, commands=['start'])
 async def start_admin(message):
     await bot.send_message(message.chat.id,
@@ -332,13 +334,14 @@ async def callback_admin_changer(message):
     if message.chat.id == config["Admin_id"]:
         clear_all_command(message.from_user.id)
         set_doadmin_edit_admin_stats(message.from_user.id, "",)
-        admin = db.db.get_list_of_admin("users")
+        admin = db.get_list_of_admin("users")
         text = ""
         for i in admin:
             text += f" ادمین با ایدی {i[0]} تاریخ عضویت {i[3]} دارای {i[4]} تومان میباشد \n"
         text += "\nبرای تغییر وضعیت ادمین به کاربر عادی یا کار بر یه ادمین ای دی عددب رو بفرست"
         await bot.reply_to(message, text=text)
-    await bot.reply_to(message, text="به این بخش دسترسی نداری:(")
+    else:
+        await bot.reply_to(message, text="به این بخش دسترسی نداری:(")
 
 
 @bot.message_handler(is_admin=True,
@@ -358,17 +361,18 @@ async def callback_user_send_msg_to_user(message):
 @bot.message_handler(commands=['help', 'start'])
 async def send_welcome(message):
     ammunt = db.get_telegram_ammunt(message.chat.id)
+    is_admin = db.get_is_admin(message.chat.id)
     if ammunt is None:
         db.add_row("users",
                    (message.chat.id, False, None,
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0, False))
         await bot.send_message(message.chat.id,
                                text_start.format(config["RobotName"]),
-                               reply_markup=start_markup())
+                               reply_markup=start_markup(is_admin))
         return
     await bot.send_message(message.chat.id,
                            text_start_2,
-                           reply_markup=start_markup())
+                           reply_markup=start_markup(is_admin))
 
 
 @bot.message_handler(func=lambda message: message.text == "خرید کانفیگ")
@@ -512,15 +516,15 @@ async def callback_query_tryes(call):
     if code:
         print(resp)
         if config['CDN_ADD'] != None:
-            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,cdn_add=config['CDN_ADD'])}```\n"
+            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,resp['alterId'],cdn_add=config['CDN_ADD'])}```\n"
         else:
-            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,)}```\n"
+            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,resp['alterId'])}```\n"
 
         await bot.delete_message(chat_id=call.from_user.id,
                                  message_id=call.message.id)
         await bot.send_message(call.from_user.id, msg, parse_mode="markdown")
-        msg = f"ایرانسل رایتل ثابت```{db.link_gen_new(resp,s.host_add)}```\n"
-        await bot.send_message(call.from_user.id, msg, parse_mode="markdown")
+        # msg = f"ایرانسل رایتل ثابت```{db.link_gen_new(resp,s.host_add)}```\n"
+        # await bot.send_message(call.from_user.id, msg, parse_mode="markdown")
     if code is None:
         await bot.send_message(call.from_user.id,
                                "به نظر مشکلی وجود دارد با ادمین تماس بگیر",
@@ -548,11 +552,11 @@ async def callback_query_MyWallet(message):
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0, False))
     if not ammunt:
         await bot.send_message(chat_id=message.from_user.id,
-                               text="در حساب شما 0 تومان موجود است")
+                               text="موجودی شما 0 تومان است")
         return
     await bot.send_message(
         chat_id=message.from_user.id,
-        text=f"در حساب شما {ammunt} تومان موجود است",
+        text=f"موجودی شما {ammunt} تومان است",
     )
 
 
@@ -571,26 +575,27 @@ async def callback_query_MyService(message):
         await bot.send_message(message.from_user.id, "اول سرویس خریداری کنید")
         return
     text = ""
+    num = 1
     list_of_id = []
     for i in call_list:
         list_of_id.append(i[1])
-        text += test_my_servicee.format(str(i[0]), str(i[7]), str(i[6]),
+        text += test_my_servicee.format(str(num), str(i[7]), str(i[6]),
                                         size(int(i[5])), str(i[4]), str(i[3]))
+        num += 1
 
     await bot.send_message(chat_id=message.from_user.id,
                            text=text,
                            reply_markup=myservice_reply(list_of_id,
-                                                        message.from_user.id),
-                           parse_mode="markdown")
+                                                        message.from_user.id,), parse_mode="HTML")
 
 
-@bot.message_handler(func=lambda message: message.text == "آیدی من")
+@ bot.message_handler(func=lambda message: message.text == "آیدی من")
 async def callback_query_my_id(message):
     text_ = f"ایدی شما ```{message.from_user.id}```"
     await bot.send_message(message.from_user.id, text_, parse_mode="markdown")
 
 
-@bot.callback_query_handler(func=lambda call: call.data[0:3] == "GMS")
+@ bot.callback_query_handler(func=lambda call: call.data[0:3] == "GMS")
 async def callback_query_GMS(call):
     call_data = str(call.data).split("_")
     # if s.CHECK_POINT is False:
@@ -602,8 +607,10 @@ async def callback_query_GMS(call):
         await bot.send_message(call.from_user.id, "اطلاعات یافت نشد")
         return
     mandeh = checck[7] - (checck[4] + checck[5])
+    masrafi = (checck[4] + checck[5])
     tarikh = checck[6]
     vasiat = checck[2]
+    koll = checck[7]
     if tarikh == 0:
         tarikh = "نامحدود"
     if vasiat == 0:
@@ -611,14 +618,15 @@ async def callback_query_GMS(call):
     elif vasiat == 1:
         vasiat = "فعال"
 
-    text = f"حساب با ادرس: \n{checck[3]}\n وضعیت: {vasiat}\n دانلود: {checck[5]} اپلود: {checck[4]} حجم کل: {checck[7]} مانده: {mandeh}\n تاریخ انقضا: {tarikh} "
+    # text = f"حساب با ادرس: \n{checck[3]}\n وضعیت: {vasiat}\n دانلود: {checck[5]} اپلود: {checck[4]} حجم کل: {checck[7]} مانده: {mandeh}\n تاریخ انقضا: {tarikh} "
+    text = service_call_text.format(vasiat, masrafi, mandeh, koll, tarikh)
     await bot.answer_callback_query(call.id, "ok")
     await bot.send_message(call.from_user.id, text)
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command=["addAmount"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command=["addAmount"],
+                      func=lambda message: True)
 async def addAmount_admin(message):
     # print("is here")
     res = get_doadmin(message.from_user.id, "addAmount")
@@ -653,9 +661,9 @@ async def addAmount_admin(message):
             return
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command_new=["addserver"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command_new=["addserver"],
+                      func=lambda message: True)
 async def addserver_admin(message):
     print("is here")
     res = get_doadmin_new(message.from_user.id, )
@@ -717,9 +725,9 @@ async def addserver_admin(message):
         clear_all_command(message.from_user.id)
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command_new=["editserver"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command_new=["editserver"],
+                      func=lambda message: True)
 async def editserver_admin(message):  # TODO ...
     print("is here edit sever")
     res = get_doadmin_new(message.from_user.id, )
@@ -776,9 +784,9 @@ async def editserver_admin(message):  # TODO ...
         clear_all_command(message.from_user.id)
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command_new=["sendmsg"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command_new=["sendmsg"],
+                      func=lambda message: True)
 async def addmsg_admin(message):
     res = get_doadmin_new(message.from_user.id)
     # command = res[b"command"].decode("utf-8")
@@ -798,31 +806,33 @@ async def addmsg_admin(message):
                            reply_markup=send_msg_sure())
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command_new=["editadmin"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command_new=["editadmin"],
+                      func=lambda message: True)
 async def editadmin(message):
     res = get_doadmin_new(message.from_user.id)
     chat_id_of_user = res[b"chat_id_of_user"].decode("utf-8")
-
+    if int(message.text) == config["Admin_id"]:
+        await bot.reply_to(message, " ای دی خودته :|")
+        return
     if res is {}:
         await bot.reply_to(message, "دستور شناسایی نشد :|")
         return
     if chat_id_of_user == "":
         # update_doadmin_new(message.from_user.id,
         #                    "chat_id_of_user", message.text)
-        id_admin_or_not = db.get_is_admin(message.text)
+        id_admin_or_not = db.get_is_admin(int(message.text))
         if id_admin_or_not == True:
-            db.admin_updator(message.text, False)
+            db.admin_updator(int(message.text), False)
             await bot.reply_to(message, "کاربر ادمین به یوزر عادی تغییر وضعیت داد")
         elif id_admin_or_not == False:
-            db.admin_updator(message.text, True)
+            db.admin_updator(int(message.text), True)
             await bot.reply_to(message, "کاربر به ادمین تغییر وضعیت داد")
 
 
-@bot.message_handler(is_admin=True,
-                     caching_command_new=["sendmsgtoall"],
-                     func=lambda message: True)
+@ bot.message_handler(is_admin=True,
+                      caching_command_new=["sendmsgtoall"],
+                      func=lambda message: True)
 async def msg_admin_all(message):
     res = get_doadmin_new(message.from_user.id)
     # command = res[b"command"].decode("utf-8")
@@ -840,24 +850,24 @@ async def msg_admin_all(message):
 
 if __name__ == "__main__":
     print("Robot is working...")
-    asyncio_helper.proxy = 'http://127.0.0.1:2080'
     bot.add_custom_filter(IsAdmin())
     bot.add_custom_filter(IsAdminCall())
     bot.add_custom_filter(CachingCommand())
     bot.add_custom_filter(CachingCommandNew())
+    if config["Sand_box"]:
+        asyncio_helper.proxy = 'http://127.0.0.1:2080'
 
-    loop = asyncio.new_event_loop()
-    loop.create_task(bot.polling(non_stop=True),)
-    loop.run_forever()
-
-    # Build ssl context
-    # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    # context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
-
-    # # Start aiohttp server
-    # web.run_app(
-    #     setup(),
-    #     host=WEBHOOK_LISTEN,
-    #     port=WEBHOOK_PORT,
-    #     # ssl_context=context,
-    # )
+        loop = asyncio.new_event_loop()
+        loop.create_task(bot.polling(non_stop=True),)
+        loop.run_forever()
+    else:
+        # Build ssl context
+        # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        # context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
+        # # Start aiohttp server
+        web.run_app(
+            setup(),
+            host=WEBHOOK_LISTEN,
+            port=WEBHOOK_PORT,
+            # ssl_context=context,
+        )

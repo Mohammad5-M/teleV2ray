@@ -2,7 +2,7 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def start_markup():
+def start_markup(is_admin: bool):
     markup = ReplyKeyboardMarkup()
     markup.row_width = 2
     markup.add(KeyboardButton("خرید کانفیگ", ))
@@ -15,6 +15,9 @@ def start_markup():
 
     markup.add(KeyboardButton("ارتباط با ما", ),
                KeyboardButton("راهنما", ))
+    if is_admin:
+        markup.add(KeyboardButton(
+            "بازگشت به پنل ادمین", ))
     return markup
 
 

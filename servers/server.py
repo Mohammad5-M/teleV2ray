@@ -1,9 +1,9 @@
 import requests
 import logging
 from datetime import datetime
-from servers.confdata import gen_user_config_vless_ws, gen_data_for_req
+from servers import gen_user_config_vless_ws, gen_data_for_req
 import uuid
-from models.setup import *
+from models import *
 
 
 class ServerClass:
@@ -103,7 +103,7 @@ class ServerClass:
         creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         user_config = gen_data_for_req(
-            port, random_client_id, 0, email, 0, traffic_limit)
+            port, random_client_id, None, email, None, traffic_limit)
         print(user_config)
 
         headers = {"Content-Type": "application/json"}
