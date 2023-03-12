@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from aiohttp import web
 from telebot import asyncio_helper
 from servers import ServerClass
-from utils import load_config, serv_to_table_str, alternative, milliseconds_to_day_from_now
+from uti import load_config, serv_to_table_str, alternative, milliseconds_to_day_from_now
 from telebot.async_telebot import AsyncTeleBot
 from hurry.filesize import size
 from caching import (get_doadmin, set_doadmin_addAmount,

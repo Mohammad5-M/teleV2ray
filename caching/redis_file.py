@@ -1,7 +1,7 @@
 import redis
 import json
 from datetime import timedelta
-from utils import load_config
+from uti import load_config
 
 
 config = load_config()

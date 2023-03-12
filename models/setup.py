@@ -1,7 +1,7 @@
 import sqlite3
 import random
 import json
-from utils import *
+from uti import *
 
 
 class SqliteDB:

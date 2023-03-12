@@ -2,7 +2,7 @@ import json
 import re
 import base64
 import yaml
-import datetime
+from datetime import datetime, timedelta
 
 
 def load_config(path='config.yaml'):
@@ -65,17 +65,19 @@ alternative = [
 
 
 def time_in_defult_days_milliseconds(days=30):
-    presentDate = datetime.datetime.now()
-    ddd = datetime.timedelta(days=days)+presentDate
+    presentDate = datetime.now()
+    ddd = timedelta(days=days) + presentDate
     ddd = ddd.timestamp()*1000.0
     return ddd.__int__()
 
 
 def milliseconds_to_day_from_now(millisec):
-    presentDate = datetime.datetime.now()
-    return (datetime.datetime.fromtimestamp(millisec/1000.0) - presentDate).days
+    presentDate = datetime.now()
+    return (datetime.fromtimestamp(millisec/1000.0) - presentDate).days
 
 
 if __name__ == "__main__":
-    ppp = encode_utf8("hi")
+    # ppp = time_in_defult_days_milliseconds()
+    ppp = milliseconds_to_day_from_now(1681241291461)
+
     print(ppp)
