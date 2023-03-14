@@ -391,7 +391,7 @@ async def send_welcome(message):
                            reply_markup=start_markup(bool(is_admin)))
 
 
-@bot.message_handler(func=lambda message: message.text == "خرید کانفیگ")
+@bot.message_handler(func=lambda message: message.text == "خرید کانفیگ🛒")
 async def replymarkup_BuyConf(message):
     await bot.send_message(chat_id=message.from_user.id,
                            text="انتخاب کن!",
@@ -539,7 +539,7 @@ async def callback_query_tryes(call):
         if config['CDN_ADD'] != None:
             msg = f"```{db.link_gen_cdn(resp,s.host_add,resp['alterId'],cdn_add=config['CDN_ADD'])}```\n"
         else:
-            msg = f"همراه اول```{db.link_gen_cdn(resp,s.host_add,resp['alterId'])}```\n"
+            msg = f"```{db.link_gen_cdn(resp,s.host_add,resp['alterId'])}```\n"
 
         await bot.delete_message(chat_id=call.from_user.id,
                                  message_id=call.message.id)
@@ -560,7 +560,7 @@ async def callback_query_trno(call):
                                 reply_markup=start_markup(False))
 
 
-@bot.message_handler(func=lambda message: message.text == "کیف پول")
+@bot.message_handler(func=lambda message: message.text == "کیف پول💼")
 async def callback_query_MyWallet(message):
     print("hi")
 
@@ -582,14 +582,14 @@ async def callback_query_MyWallet(message):
 
 
 @bot.message_handler(
-    func=lambda message: message.text == "دریافت نرم افزار یا اپلیکیشن")
+    func=lambda message: message.text == "دریافت نرم افزار یا اپلیکیشن⬇️")
 async def callback_query_GetAPP(message):
     await bot.send_message(chat_id=message.from_user.id,
                            text="برای دانلود انتخاب کن",
                            reply_markup=Download_link_markup())
 
 
-@bot.message_handler(func=lambda message: message.text == "استعلام سرویس من")
+@bot.message_handler(func=lambda message: message.text == "استعلام سرویس من🤙")
 async def callback_query_MyService(message):
     clear_all_command(message.from_user.id,)
     set_do_user(message.from_user.id,)
@@ -597,7 +597,7 @@ async def callback_query_MyService(message):
                            text="...لطفا آدرس را ارسال کنید",)
 
 
-@ bot.message_handler(func=lambda message: message.text == "آیدی من")
+@ bot.message_handler(func=lambda message: message.text == "آیدی من🆔")
 async def callback_query_my_id(message):
     text_ = f"ایدی شما ```{message.from_user.id}```"
     await bot.send_message(message.from_user.id, text_, parse_mode="markdown")
@@ -914,7 +914,7 @@ if __name__ == "__main__":
     bot.add_custom_filter(CachingCommandNew())
     bot.add_custom_filter(CachingCommandUser())
     if config["Sand_box"]:
-        asyncio_helper.proxy = 'http://127.0.0.1:2080'
+        asyncio_helper.proxy = 'http://127.0.0.1:8889'
 
         loop = asyncio.new_event_loop()
         loop.create_task(bot.polling(non_stop=True),)

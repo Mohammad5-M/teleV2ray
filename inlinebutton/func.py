@@ -5,16 +5,16 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 def start_markup(is_admin: bool):
     markup = ReplyKeyboardMarkup()
     markup.row_width = 2
-    markup.add(KeyboardButton("خرید کانفیگ", ))
-    markup.add(KeyboardButton("کیف پول", ),
-               KeyboardButton("استعلام سرویس من", ))
-    markup.add(KeyboardButton("کد تخفیف", ),
-               KeyboardButton("آیدی من", ))
+    markup.add(KeyboardButton("خرید کانفیگ🛒", ))
+    markup.add(KeyboardButton("کیف پول💼", ),
+               KeyboardButton("استعلام سرویس من🤙", ))
+    markup.add(KeyboardButton("کد تخفیف🎯", ),
+               KeyboardButton("آیدی من🆔", ))
     markup.add(KeyboardButton(
-        "دریافت نرم افزار یا اپلیکیشن", ))
+        "دریافت نرم افزار یا اپلیکیشن⬇️", ))
 
-    markup.add(KeyboardButton("ارتباط با ما", ),
-               KeyboardButton("راهنما", ))
+    markup.add(KeyboardButton("ارتباط با ما📞", ),
+               KeyboardButton("راهنما👩‍🏫", ))
     if is_admin:
         markup.add(KeyboardButton(
             "بازگشت به پنل ادمین", ))
@@ -41,11 +41,11 @@ def yes_or_no_markup(in_num):
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(InlineKeyboardButton(
-        "کانفیگ برای همراه اول", callback_data=f"tryes_{in_num}_hamrah"))
+        "کانفیگ برای همراه اول🟦", callback_data=f"tryes_{in_num}_hamrah"))
     markup.add(InlineKeyboardButton(
-        "کانفیگ برای ایرانسل", callback_data=f"tryes_{in_num}_iran"))
+        "کانفیگ برای ایرانسل و...🟨", callback_data=f"tryes_{in_num}_iran"))
     markup.add(InlineKeyboardButton(
-        "انصراف", callback_data="trno_00"))
+        "انصراف◀️", callback_data="trno_00"))
 
     return markup
 
