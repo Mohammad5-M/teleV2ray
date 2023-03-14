@@ -99,7 +99,7 @@ class ServerClass:
                 return None, None
         random_client_id = str(uuid.uuid4())
         # f2828282-1cb1-46ab-b5b5-18ba510dd1ef@407599569.com
-        email = f"{random_client_id}@{telegram_id}abc.com".replace("-", "")
+        email = f"{random_client_id}@{telegram_id}"
         # port = self.db.generate_random_port(self.serv)
         print(port)
         creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

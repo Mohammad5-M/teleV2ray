@@ -23,6 +23,12 @@ def serv_to_table_str(all_list: list):
 
 # print(serv_to_table_str([(1, '192,168,1,35', 8000, 'admin',
 #       'admin', 1, 1), (2, '192.168.1.22', '5000', 'admin', '', 0, 0)]))
+def decoder_into_utf8(base64_string: str):
+    """basicly is returning decoded string but you have to now we use standard decode wich is RFC 4648"""
+    base64_bytes = base64_string.encode("utf-8")
+    sample_string_bytes = base64.standard_b64decode(base64_bytes)
+    sample_string = sample_string_bytes.decode("utf-8")
+    return sample_string
 
 
 def encode_utf8(sample_string: dict) -> str:

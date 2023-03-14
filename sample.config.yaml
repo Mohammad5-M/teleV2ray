@@ -2,10 +2,17 @@ Admin_id: 2064070474
 TGToken: "6080260726:AAHgyCGa42h3xMuH8gQ36ZaaRZBKv4Di2_g" 
 RobotName: "VPN"
 
-Redis_host: "redis-16492.c293.eu-central-1-1.ec2.cloud.redislabs.com"
-Redis_user: "default"
-Redis_pass: "KyekoYEiJbP9UH8LWEMsYvEorVBWJhtT"
-Redis_port: 16492
+# Redis_host: "redis-16492.c293.eu-central-1-1.ec2.cloud.redislabs.com"
+# Redis_user: "default"
+# Redis_pass: "KyekoYEiJbP9UH8LWEMsYvEorVBWJhtT"
+# Redis_port: 16492
 
+
+Redis_host: "localhost"
+Redis_user: "default"
+Redis_pass: ""
+Redis_port: 6379
 
 CDN_ADD: "104.17.32.105"
+
+Sand_box: True

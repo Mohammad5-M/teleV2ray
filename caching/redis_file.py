@@ -84,6 +84,12 @@ def clear_all_command(admin_id):
     r.delete(f"addserver{admin_id}", f"addAmount{admin_id}", admin_id)
 
 
+def set_do_user(user_id, URI="",):
+    ex = timedelta(minutes=10)
+    r.hset(user_id, mapping={"command": "usergetdata", "URI": URI, })
+    r.expire(user_id, ex)
+
+
 if __name__ == "__main__":
     # set_doadmin_addAmount(407599569, 123456789, 100000)
     # set_doadmin_addServer(407599569, "local", 585, "admin", "admin")

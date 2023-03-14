@@ -3,11 +3,13 @@ import logging
 import telebot
 import os
 import ssl
+import json
 from datetime import datetime, timedelta
 from aiohttp import web
 from telebot import asyncio_helper
 from servers import ServerClass
-from uti import load_config, serv_to_table_str, alternative, milliseconds_to_day_from_now
+from uti import (load_config, serv_to_table_str, alternative,
+                 milliseconds_to_day_from_now, decoder_into_utf8)
 from telebot.async_telebot import AsyncTeleBot
 from hurry.filesize import size
 from caching import (get_doadmin, set_doadmin_addAmount,
@@ -15,7 +17,7 @@ from caching import (get_doadmin, set_doadmin_addAmount,
                      set_doadmin_send_msg_to_all,
                      set_doadmin_addServer, clear_all_command,
                      set_doadmin_send_msg, get_doadmin_new,
-                     update_doadmin_new, set_doadmin_edit_admin_stats)
+                     update_doadmin_new, set_doadmin_edit_admin_stats, set_do_user)
 
 from models import SqliteDB
 from inlinebutton import (start_markup, conf_markup, yes_or_no_markup,
@@ -69,9 +71,8 @@ async def hello(request):
 
     return web.Response(text="Hello, world")
 
+
 # Process webhook calls
-
-
 async def handle(request):
     print("req ...")
     if request.match_info.get('token') == bot.token:
@@ -139,6 +140,16 @@ class CachingCommand(telebot.asyncio_filters.AdvancedCustomFilter):
 
 class CachingCommandNew(telebot.asyncio_filters.AdvancedCustomFilter):
     key = 'caching_command_new'
+
+    @staticmethod
+    async def check(message: telebot.types.Message, command: str):
+        result = get_doadmin_new(message.from_user.id, )
+        print(result[b"command"] == bytes(command[0], "utf-8"))
+        return result[b"command"] == bytes(command[0], "utf-8")
+
+
+class CachingCommandUser(telebot.asyncio_filters.AdvancedCustomFilter):
+    key = 'caching_command_user'
 
     @staticmethod
     async def check(message: telebot.types.Message, command: str):
@@ -580,23 +591,10 @@ async def callback_query_GetAPP(message):
 
 @bot.message_handler(func=lambda message: message.text == "استعلام سرویس من")
 async def callback_query_MyService(message):
-    call_list = db.get_services(message.from_user.id)
-    if call_list is None:
-        await bot.send_message(message.from_user.id, "اول سرویس خریداری کنید")
-        return
-    text = ""
-    num = 1
-    list_of_id = []
-    for i in call_list:
-        list_of_id.append(i[1])
-        text += test_my_servicee.format(str(num), str(i[7]), str(i[6]),
-                                        size(int(i[5])), str(i[4]), str(i[3]))
-        num += 1
-
+    clear_all_command(message.from_user.id,)
+    set_do_user(message.from_user.id,)
     await bot.send_message(chat_id=message.from_user.id,
-                           text=text,
-                           reply_markup=myservice_reply(list_of_id,
-                                                        message.from_user.id,), parse_mode="HTML")
+                           text="...لطفا آدرس را ارسال کنید",)
 
 
 @ bot.message_handler(func=lambda message: message.text == "آیدی من")
@@ -611,7 +609,7 @@ async def callback_query_GMS(call):
     # if s.CHECK_POINT is False:
     #     return
     checck = s.get_user_data_cdn(
-        f"{call_data[1]}@{call.from_user.id}abc.com".replace("-", ""))
+        f"{call_data[1]}@{call.from_user.id}")
 
     if checck is None:
         await bot.answer_callback_query(call.id, "اطلاعات یافت نشد")
@@ -864,12 +862,57 @@ async def msg_admin_all(message):
                            reply_markup=send_msg_too_all())
 
 
+@ bot.message_handler(
+    caching_command_user=["usergetdata"],
+    func=lambda message: True)
+async def get_uri_data_user(message):
+    res = get_doadmin_new(message.from_user.id)
+    # command = res[b"command"].decode("utf-8")
+    URI = res[b"URI"].decode("utf-8")
+    msg: str = message.text
+    seprateed = msg.split("://")[1]
+    uuid = json.loads(decoder_into_utf8(seprateed))["id"]
+    # print(j)
+    if res is {}:
+        await bot.reply_to(message, "دستور شناسایی نشد :|")
+        return
+    if URI == "":
+        checck = s.get_user_data_cdn(
+            f"{uuid}@{message.from_user.id}")
+    #     # update_doadmin_new(message.from_user.id, "URI", message.text)
+
+    if checck is None:
+        await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
+        return
+    mandeh = checck[7] - (checck[4] + checck[5])
+    masrafi = (checck[4] + checck[5])
+    tarikh = checck[6]
+    timedelta()
+    vasiat = checck[2]
+    koll = checck[7]
+
+    if vasiat == 0:
+        vasiat = "غیر فعال"
+    elif vasiat == 1:
+        vasiat = "فعال"
+
+    if tarikh == 0:
+        tarikh = "نامحدود"
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
+    else:
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
+    await bot.send_message(message.from_user.id, text)
+
+
 if __name__ == "__main__":
     print("Robot is working...")
     bot.add_custom_filter(IsAdmin())
     bot.add_custom_filter(IsAdminCall())
     bot.add_custom_filter(CachingCommand())
     bot.add_custom_filter(CachingCommandNew())
+    bot.add_custom_filter(CachingCommandUser())
     if config["Sand_box"]:
         asyncio_helper.proxy = 'http://127.0.0.1:2080'
 

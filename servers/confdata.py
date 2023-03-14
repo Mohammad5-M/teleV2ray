@@ -131,7 +131,7 @@ def gen_user_config_vless_ws(name: str, email, uuid: str, server_address: str, p
     return data
 
 
-def gen_data_for_req(port, uuid_feld, alterId, email, limitIp, totalGB, expiryTime=""):
+def gen_data_for_req(port, uuid_feld, alterId, email, limitIp, totalGB, expiryTime):
     return {
         "port": port,
         "id": uuid_feld,
