@@ -8,6 +8,7 @@ def start_markup(is_admin: bool):
     markup.add(KeyboardButton("خرید کانفیگ🛒", ))
     markup.add(KeyboardButton("کیف پول💼", ),
                KeyboardButton("استعلام سرویس من🤙", ))
+    markup.add(KeyboardButton("شارژ حساب💳", ))
     markup.add(KeyboardButton("کد تخفیف🎯", ),
                KeyboardButton("آیدی من🆔", ))
     markup.add(KeyboardButton(
