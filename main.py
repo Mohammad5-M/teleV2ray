@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from aiohttp import web
 from telebot import asyncio_helper
 from servers import ServerClass
-from uti import (load_config, serv_to_table_str, alternative,
+from uti import (load_config, serv_to_table_str, alternative, milliseconds_now,
                  milliseconds_to_day_from_now, decoder_into_utf8)
 from telebot.async_telebot import AsyncTeleBot
 from hurry.filesize import size
@@ -693,7 +693,7 @@ async def get_uri_data_user(message):
                                         size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
     else:
         text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
-                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
+                                        size(int(mandeh), alternative), size(int(koll), alternative), "\n"+str(milliseconds_now(tarikh)))
     is_admin = db.get_is_admin(message.chat.id)
     clear_all_command(message.from_user.id)
     await bot.send_message(message.from_user.id, text, reply_markup=start_markup(bool(is_admin)))
@@ -741,10 +741,10 @@ async def get_uri_data_user(message):
                                         size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
     else:
         text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
-                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
+                                        size(int(mandeh), alternative), size(int(koll), alternative), "\n"+str(milliseconds_now(tarikh)))
     is_admin = db.get_is_admin(message.chat.id)
     clear_all_command(message.from_user.id)
-    await bot.send_message(message.from_user.id, text, reply_markup=start_markup(bool(is_admin)))
+    await bot.send_message(message.from_user.id, text, reply_markup=Admin_start_markup())
 
 
 @ bot.message_handler(is_admin=True, caching_command=["addAmount"],

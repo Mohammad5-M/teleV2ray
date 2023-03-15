@@ -12,7 +12,7 @@ def load_config(path='config.yaml'):
 
 
 def serv_to_table_str(all_list: list):
-    text = "<code>|ID|_____server____|port|user|pass|UC|U|</code>\n"
+    text = "<code>|ID|     server    |port|user|pass|UC|U|</code>\n"
     char = " "
     for i in all_list:
         text += "<code>|{}|{}|{}|{}~|{}~|{}|{}|</code>\n".format(str(i[0])[:2].center(2, char), str(i[1])[:15].center(15, char), str(i[2])[:4].center(4, char), str(i[3])[:3].center(3, char),
@@ -82,8 +82,13 @@ def milliseconds_to_day_from_now(millisec):
     return (datetime.fromtimestamp(millisec/1000.0) - presentDate).days
 
 
+def milliseconds_now(millisec):
+    presentDate = datetime.now()
+    return (datetime.fromtimestamp(millisec/1000.0) - presentDate).__str__().split(".")[0].replace("days", "روز") + "ساعت"
+
+
 if __name__ == "__main__":
     # ppp = time_in_defult_days_milliseconds()
-    ppp = milliseconds_to_day_from_now(1681241291461)
+    ppp = milliseconds_now(1681241291461)
 
     print(ppp)
