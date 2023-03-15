@@ -233,6 +233,16 @@ class SqliteDB:
         else:
             return None
 
+    def get_server_ip_from_host(self, hostname):
+        """Returns a list of dictionaries containing the link and server for the given telegram_id, or None if not found"""
+        query = f"SELECT server FROM servers WHERE host_add = ?"
+        self.cursor.execute(query, (hostname,))
+        row = self.cursor.fetchone()
+        if row:
+            return row[0]
+        else:
+            return None
+
     def get_server_from_in_use(self, in_use: bool):
         """Returns a list of dictionaries containing the link and server for the given telegram_id, or None if not found"""
         query = f"SELECT * FROM servers WHERE in_use = ?"
@@ -316,7 +326,7 @@ if __name__ == "__main__":
     db = SqliteDB()
     # ddd = db.admin_updator(407599569, True)
     # ddd = db.admin_updator(407599569, True)
-    ddd = db.get_list_of_admin("users")
+    ddd = db.get_server_ip_from_host("host_add")
 
     # ddd = db.get_clients("localhost", 70000)
     print(ddd)

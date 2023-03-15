@@ -75,6 +75,10 @@ async def hello(request):
     return web.Response(text="Hello, world")
 
 
+async def db_downloader(request):
+    pass
+
+
 # Process webhook calls
 async def handle(request):
     print("req ...")
@@ -99,7 +103,7 @@ async def shutdown(app):
 async def setup():
     app = web.Application()
     app.add_routes([web.get('/', hello)])
-
+    app.add_routes([web.get('/download-db', db_downloader)])
     app.router.add_post('/{token}/', handle)
     app.on_cleanup.append(shutdown)
     return app
@@ -661,14 +665,20 @@ async def get_uri_data_user(message):
     URI = res[b"URI"].decode("utf-8")
     msg: str = message.text
     seprateed = msg.split("://")[1]
+    try:
+        serv = json.loads(decoder_into_utf8(seprateed))["sni"]
+    except:
+        serv = json.loads(decoder_into_utf8(seprateed))["add"]
+    serv = db.get_server_ip_from_host(serv)
+    port = json.loads(decoder_into_utf8(seprateed))["port"]
     uuid = json.loads(decoder_into_utf8(seprateed))["id"]
     # print(j)
     if res is {}:
         await bot.reply_to(message, "دستور شناسایی نشد :|")
         return
     if URI == "":
-        checck = s.get_user_data_cdn(
-            f"{uuid}@{message.from_user.id}")
+        checck = s.get_user_data_cdn(serv, port,
+                                     f"{uuid}@{message.from_user.id}")
     #     # update_doadmin_new(message.from_user.id, "URI", message.text)
 
     if checck is None:
@@ -710,6 +720,11 @@ async def get_uri_data_user(message):
     URI = res[b"URI"].decode("utf-8")
     msg: str = message.text
     seprateed = msg.split("://")[1]
+    try:
+        serv = json.loads(decoder_into_utf8(seprateed))["sni"]
+    except:
+        serv = json.loads(decoder_into_utf8(seprateed))["add"]
+    serv = db.get_server_ip_from_host(serv)
     port = json.loads(decoder_into_utf8(seprateed))["port"]
     uuid = json.loads(decoder_into_utf8(seprateed))["id"]
     # print(j)
@@ -717,7 +732,7 @@ async def get_uri_data_user(message):
         await bot.reply_to(message, "دستور شناسایی نشد :|")
         return
     if URI == "":
-        checck = s.get_admin_data_cdn(port, uuid)
+        checck = s.get_admin_data_cdn(serv, port, uuid)
     #     # update_doadmin_new(message.from_user.id, "URI", message.text)
     if checck is None:
         clear_all_command(message.from_user.id)
