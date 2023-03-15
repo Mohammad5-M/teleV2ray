@@ -129,13 +129,13 @@ class ServerClass:
         resp = requests.post(url, data=payload)
         return resp
 
-    def get_user_data_cdn(self, serv, port, email):
-        url = f"http://{serv}:{port}/user/{email}"
+    def get_user_data_cdn(self, serv, panport, email):
+        url = f"http://{serv}:{panport}/user/{email}"
         r = requests.get(url)
         return r.json()
 
-    def get_admin_data_cdn(self, serv, port, uuid):
-        url = f"http://{serv}:{port}/admin/{port}/{uuid}"
+    def get_admin_data_cdn(self, serv, panport, conf_port, uuid):
+        url = f"http://{serv}:{panport}/admin/{conf_port}/{uuid}"
         r = requests.get(url)
         return r.json()
 

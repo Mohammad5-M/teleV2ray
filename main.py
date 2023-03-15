@@ -677,7 +677,7 @@ async def get_uri_data_user(message):
         await bot.reply_to(message, "دستور شناسایی نشد :|")
         return
     if URI == "":
-        checck = s.get_user_data_cdn(serv, port,
+        checck = s.get_user_data_cdn(serv[1], serv[2],
                                      f"{uuid}@{message.from_user.id}")
     #     # update_doadmin_new(message.from_user.id, "URI", message.text)
 
@@ -727,12 +727,12 @@ async def get_uri_data_user(message):
     serv = db.get_server_ip_from_host(serv)
     port = json.loads(decoder_into_utf8(seprateed))["port"]
     uuid = json.loads(decoder_into_utf8(seprateed))["id"]
-    # print(j)
+    print(serv, port, uuid)
     if res is {}:
         await bot.reply_to(message, "دستور شناسایی نشد :|")
         return
     if URI == "":
-        checck = s.get_admin_data_cdn(serv, port, uuid)
+        checck = s.get_admin_data_cdn(serv[1], serv[2], port, uuid)
     #     # update_doadmin_new(message.from_user.id, "URI", message.text)
     if checck is None:
         clear_all_command(message.from_user.id)

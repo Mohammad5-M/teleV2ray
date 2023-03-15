@@ -235,11 +235,11 @@ class SqliteDB:
 
     def get_server_ip_from_host(self, hostname):
         """Returns a list of dictionaries containing the link and server for the given telegram_id, or None if not found"""
-        query = f"SELECT server FROM servers WHERE host_add = ?"
+        query = f"SELECT * FROM servers WHERE host_add = ?"
         self.cursor.execute(query, (hostname,))
         row = self.cursor.fetchone()
         if row:
-            return row[0]
+            return row
         else:
             return None
 
