@@ -80,6 +80,12 @@ def get_doadmin_new(admin_id, ):
     return res
 
 
+def set_do_admin(admin_id, URI="",):
+    ex = timedelta(minutes=10)
+    r.hset(admin_id, mapping={"command": "admingetdata", "URI": URI, })
+    r.expire(admin_id, ex)
+
+
 def clear_all_command(admin_id):
     r.delete(f"addserver{admin_id}", f"addAmount{admin_id}", admin_id)
 

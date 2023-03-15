@@ -14,7 +14,7 @@ from telebot.async_telebot import AsyncTeleBot
 from hurry.filesize import size
 from caching import (get_doadmin, set_doadmin_addAmount,
                      update_doadmin, set_doadmin_editServer,
-                     set_doadmin_send_msg_to_all,
+                     set_doadmin_send_msg_to_all, set_do_admin,
                      set_doadmin_addServer, clear_all_command,
                      set_doadmin_send_msg, get_doadmin_new,
                      update_doadmin_new, set_doadmin_edit_admin_stats, set_do_user)
@@ -60,6 +60,9 @@ if db.get_telegram_ammunt(config["Admin_id"]) is None:
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0, True))
 
 
+#########################
+# this is webhook area #
+#######################
 async def hello(request):
     # Remove webhook, it fails sometimes the set if there is a previous webhook
     logger.info('Starting up: removing old webhook')
@@ -168,6 +171,14 @@ async def start_admin(message):
     await bot.send_message(message.chat.id,
                            'You are admin of this bot!',
                            reply_markup=Admin_start_markup())
+
+
+@bot.message_handler(is_admin=True, func=lambda message: message.text == "استعلام سروریس")
+async def start_admin(message):
+    clear_all_command(message.from_user.id,)
+    set_do_admin(message.from_user.id,)
+    await bot.send_message(chat_id=message.from_user.id,
+                           text="لطفا لینک اتصال خریداری شده را وارد کنید",)
 
 
 @bot.message_handler(is_admin=True,
@@ -373,7 +384,7 @@ async def callback_user_send_msg_to_user(message):
 #####################
 
 
-@bot.message_handler(func=lambda message: message.text == "بازگشت")
+@bot.message_handler(func=lambda message: message.text == "بازگشت◀️")
 @bot.message_handler(commands=['help', 'start'])
 async def send_welcome(message):
     ammunt = db.get_telegram_ammunt(message.chat.id)
@@ -517,6 +528,14 @@ async def callback_query_tryes(call):
 
     if call_data[2] == "hamrah":
         port = 2083
+        # just for now
+        is_admin = db.get_is_admin(call.from_user.id)
+
+        text = "سرویس درحال حاضر موجود نمی باشد"
+        await bot.delete_message(chat_id=call.from_user.id,
+                                 message_id=call.message.id)
+        await bot.send_message(call.from_user.id, text, parse_mode="markdown", reply_markup=start_markup(bool(is_admin)))
+        return
     elif call_data[2] == "iran":
         port = 443
 
@@ -541,9 +560,11 @@ async def callback_query_tryes(call):
         else:
             msg = f"```{db.link_gen_cdn(resp,s.host_add,resp['alterId'])}```\n"
 
+        is_admin = db.get_is_admin(call.from_user.id)
         await bot.delete_message(chat_id=call.from_user.id,
                                  message_id=call.message.id)
-        await bot.send_message(call.from_user.id, msg, parse_mode="markdown")
+        await bot.send_message(call.from_user.id, msg, parse_mode="markdown", reply_markup=start_markup(bool(is_admin)))
+
         # msg = f"ایرانسل رایتل ثابت```{db.link_gen_new(resp,s.host_add)}```\n"
         # await bot.send_message(call.from_user.id, msg, parse_mode="markdown")
     if code is None:
@@ -552,15 +573,17 @@ async def callback_query_tryes(call):
                                parse_mode="markdown")
 
 
-@bot.callback_query_handler(func=lambda call: call.data[0:4] == "trno")
+@ bot.callback_query_handler(func=lambda call: call.data == "trno_00")
 async def callback_query_trno(call):
-    await bot.edit_message_text(chat_id=call.from_user.id,
-                                message_id=call.message.id,
-                                text=text_start,
-                                reply_markup=start_markup(False))
+    is_admin = db.get_is_admin(call.from_user.id)
+    await bot.delete_message(chat_id=call.from_user.id,
+                             message_id=call.message.id)
+    await bot.send_message(chat_id=call.from_user.id,
+                           text=text_start_2,
+                           reply_markup=start_markup(int(is_admin)))
 
 
-@bot.message_handler(func=lambda message: message.text == "کیف پول💼")
+@ bot.message_handler(func=lambda message: message.text == "کیف پول💼")
 async def callback_query_MyWallet(message):
     print("hi")
 
@@ -581,7 +604,7 @@ async def callback_query_MyWallet(message):
     )
 
 
-@bot.message_handler(
+@ bot.message_handler(
     func=lambda message: message.text == "دریافت نرم افزار یا اپلیکیشن⬇️")
 async def callback_query_GetAPP(message):
     await bot.send_message(chat_id=message.from_user.id,
@@ -589,12 +612,12 @@ async def callback_query_GetAPP(message):
                            reply_markup=Download_link_markup())
 
 
-@bot.message_handler(func=lambda message: message.text == "استعلام سرویس من🤙")
+@ bot.message_handler(func=lambda message: message.text == "استعلام سرویس من🤙")
 async def callback_query_MyService(message):
     clear_all_command(message.from_user.id,)
     set_do_user(message.from_user.id,)
     await bot.send_message(chat_id=message.from_user.id,
-                           text="...لطفا آدرس را ارسال کنید",)
+                           text="لطفا لینک اتصال خریداری شده را وارد کنید",)
 
 
 @ bot.message_handler(func=lambda message: message.text == "آیدی من🆔")
@@ -603,22 +626,58 @@ async def callback_query_my_id(message):
     await bot.send_message(message.from_user.id, text_, parse_mode="markdown")
 
 
-@ bot.callback_query_handler(func=lambda call: call.data[0:3] == "GMS")
-async def callback_query_GMS(call):
-    call_data = str(call.data).split("_")
-    # if s.CHECK_POINT is False:
-    #     return
-    checck = s.get_user_data_cdn(
-        f"{call_data[1]}@{call.from_user.id}")
+@ bot.message_handler(func=lambda message: message.text == "شارژ حساب💳")
+async def callback_add_mon(message):
+    text_ = "برای شارژ حساب به پشتیبانی پیام دهید 👇🏻\n\n🌐 @V2ray_adminn"
+    await bot.send_message(message.from_user.id, text_)
+
+
+@ bot.message_handler(func=lambda message: message.text == "ارتباط با ما📞")
+async def callback_call_us(message):
+    text_ = "برای ارتباط با ما به حساب پشتیبانی پیام دهید\n🆔👉@V2ray_adminn"
+    await bot.send_message(message.from_user.id, text_)
+
+
+@ bot.message_handler(func=lambda message: message.text == "راهنما👩‍🏫")
+async def callback_info(message):
+    text_ = "آموزش ها در کانال تلگرام به نشانی ــــــ قرار گرفته است."
+    await bot.send_message(message.from_user.id, text_, parse_mode="markdown")
+
+
+@ bot.message_handler(func=lambda message: message.text == "کد تخفیف🎯")
+async def callback_info(message):
+    text_ = "دردسترس نیست:((("
+    await bot.send_message(message.from_user.id, text_, parse_mode="markdown")
+
+
+#############################
+# this is user caching area #
+#############################
+@ bot.message_handler(caching_command_user=["usergetdata"],
+                      func=lambda message: True)
+async def get_uri_data_user(message):
+    res = get_doadmin_new(message.from_user.id)
+    # command = res[b"command"].decode("utf-8")
+    URI = res[b"URI"].decode("utf-8")
+    msg: str = message.text
+    seprateed = msg.split("://")[1]
+    uuid = json.loads(decoder_into_utf8(seprateed))["id"]
+    # print(j)
+    if res is {}:
+        await bot.reply_to(message, "دستور شناسایی نشد :|")
+        return
+    if URI == "":
+        checck = s.get_user_data_cdn(
+            f"{uuid}@{message.from_user.id}")
+    #     # update_doadmin_new(message.from_user.id, "URI", message.text)
 
     if checck is None:
-        await bot.answer_callback_query(call.id, "اطلاعات یافت نشد")
-        await bot.send_message(call.from_user.id, "اطلاعات یافت نشد")
+        clear_all_command(message.from_user.id)
+        await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
         return
     mandeh = checck[7] - (checck[4] + checck[5])
     masrafi = (checck[4] + checck[5])
     tarikh = checck[6]
-    timedelta()
     vasiat = checck[2]
     koll = checck[7]
 
@@ -626,6 +685,7 @@ async def callback_query_GMS(call):
         vasiat = "غیر فعال"
     elif vasiat == 1:
         vasiat = "فعال"
+    print(tarikh)
 
     if tarikh == 0:
         tarikh = "نامحدود"
@@ -634,12 +694,60 @@ async def callback_query_GMS(call):
     else:
         text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
                                         size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
-    await bot.answer_callback_query(call.id, "ok")
-    await bot.send_message(call.from_user.id, text)
+    is_admin = db.get_is_admin(message.chat.id)
+    clear_all_command(message.from_user.id)
+    await bot.send_message(message.from_user.id, text, reply_markup=start_markup(bool(is_admin)))
 
 
-@ bot.message_handler(is_admin=True,
-                      caching_command=["addAmount"],
+##############################
+# this is admin caching area #
+##############################
+@ bot.message_handler(caching_command_new=["admingetdata"],
+                      func=lambda message: True)
+async def get_uri_data_user(message):
+    res = get_doadmin_new(message.from_user.id)
+    # command = res[b"command"].decode("utf-8")
+    URI = res[b"URI"].decode("utf-8")
+    msg: str = message.text
+    seprateed = msg.split("://")[1]
+    port = json.loads(decoder_into_utf8(seprateed))["port"]
+    uuid = json.loads(decoder_into_utf8(seprateed))["id"]
+    # print(j)
+    if res is {}:
+        await bot.reply_to(message, "دستور شناسایی نشد :|")
+        return
+    if URI == "":
+        checck = s.get_admin_data_cdn(port, uuid)
+    #     # update_doadmin_new(message.from_user.id, "URI", message.text)
+    if checck is None:
+        clear_all_command(message.from_user.id)
+        await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
+        return
+    mandeh = checck[7] - (checck[4] + checck[5])
+    masrafi = (checck[4] + checck[5])
+    tarikh = checck[6]
+    vasiat = checck[2]
+    koll = checck[7]
+
+    if vasiat == 0:
+        vasiat = "غیر فعال"
+    elif vasiat == 1:
+        vasiat = "فعال"
+    print(tarikh)
+
+    if tarikh == 0:
+        tarikh = "نامحدود"
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
+    else:
+        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
+                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
+    is_admin = db.get_is_admin(message.chat.id)
+    clear_all_command(message.from_user.id)
+    await bot.send_message(message.from_user.id, text, reply_markup=start_markup(bool(is_admin)))
+
+
+@ bot.message_handler(is_admin=True, caching_command=["addAmount"],
                       func=lambda message: True)
 async def addAmount_admin(message):
     # print("is here")
@@ -675,8 +783,7 @@ async def addAmount_admin(message):
             return
 
 
-@ bot.message_handler(is_admin=True,
-                      caching_command_new=["addserver"],
+@ bot.message_handler(is_admin=True, caching_command_new=["addserver"],
                       func=lambda message: True)
 async def addserver_admin(message):
     print("is here")
@@ -860,50 +967,6 @@ async def msg_admin_all(message):
         await bot.reply_to(message,
                            f"پیام   {message.text} به تمام کاربرهاارسال شود؟",
                            reply_markup=send_msg_too_all())
-
-
-@ bot.message_handler(
-    caching_command_user=["usergetdata"],
-    func=lambda message: True)
-async def get_uri_data_user(message):
-    res = get_doadmin_new(message.from_user.id)
-    # command = res[b"command"].decode("utf-8")
-    URI = res[b"URI"].decode("utf-8")
-    msg: str = message.text
-    seprateed = msg.split("://")[1]
-    uuid = json.loads(decoder_into_utf8(seprateed))["id"]
-    # print(j)
-    if res is {}:
-        await bot.reply_to(message, "دستور شناسایی نشد :|")
-        return
-    if URI == "":
-        checck = s.get_user_data_cdn(
-            f"{uuid}@{message.from_user.id}")
-    #     # update_doadmin_new(message.from_user.id, "URI", message.text)
-
-    if checck is None:
-        await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
-        return
-    mandeh = checck[7] - (checck[4] + checck[5])
-    masrafi = (checck[4] + checck[5])
-    tarikh = checck[6]
-    timedelta()
-    vasiat = checck[2]
-    koll = checck[7]
-
-    if vasiat == 0:
-        vasiat = "غیر فعال"
-    elif vasiat == 1:
-        vasiat = "فعال"
-
-    if tarikh == 0:
-        tarikh = "نامحدود"
-        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
-                                        size(int(mandeh), alternative), size(int(koll), alternative), str(tarikh))
-    else:
-        text = service_call_text.format(str(vasiat), size(int(masrafi), alternative),
-                                        size(int(mandeh), alternative), size(int(koll), alternative), str(milliseconds_to_day_from_now(tarikh))+" روز")
-    await bot.send_message(message.from_user.id, text)
 
 
 if __name__ == "__main__":

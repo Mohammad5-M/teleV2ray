@@ -34,7 +34,7 @@ def conf_markup():
     markup.add(KeyboardButton(
         "🔷۱۰۰گیگ یک ماه (170,000هزار تومان)", ))
     markup.add(KeyboardButton(
-        "بازگشت", ))
+        "بازگشت◀️", ))
     return markup
 
 
@@ -113,6 +113,8 @@ def Admin_start_markup():
         "شارژ حساب کاربر", ), KeyboardButton("کد تخفیف", ))
     markup.add(KeyboardButton(
         "منوی اصلی", ), KeyboardButton("پیام به کاربر",))
+    markup.add(KeyboardButton(
+        "استعلام سروریس", ))
 
     return markup
 

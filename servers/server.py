@@ -134,6 +134,11 @@ class ServerClass:
         r = requests.get(url)
         return r.json()
 
+    def get_admin_data_cdn(self, port, uuid):
+        url = f"http://{self.serv_and_port}/admin/{port}/{uuid}"
+        r = requests.get(url)
+        return r.json()
+
     def get_user_data(self, id_of_panel):
         r = self.login()
         url = f"http://{self.serv_and_port}/xui/API/inbounds/get/{id_of_panel}"
