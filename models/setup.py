@@ -326,7 +326,7 @@ if __name__ == "__main__":
     db = SqliteDB()
     # ddd = db.admin_updator(407599569, True)
     # ddd = db.admin_updator(407599569, True)
-    ddd = db.get_server_ip_from_host("host_add")
+    ddd = db.get_serveers()
 
     # ddd = db.get_clients("localhost", 70000)
     print(ddd)

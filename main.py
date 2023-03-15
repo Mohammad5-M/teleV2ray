@@ -76,7 +76,7 @@ async def hello(request):
 
 
 async def db_downloader(request):
-    pass
+    return web.json_response(db.get_serveers())
 
 
 # Process webhook calls
