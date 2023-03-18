@@ -269,6 +269,15 @@ class SqliteDB:
         # commit the changes and close the connection
         self.conn.commit()
 
+    def server_user_count_updator_test(self, host, valiu):
+        # update the settings for the given id
+        # val = self.get_serveer_exist(host)[5]
+        self.conn.execute(
+            "UPDATE servers SET user_count = ? WHERE server = ?", (valiu, host))
+        # commit the changes and close the connection
+        self.conn.commit()
+        return valiu
+
     def add_row(self, table_name, values):
         placeholders = ", ".join("?" * len(values))
         query = f"INSERT INTO {table_name} VALUES ({placeholders})"
@@ -326,7 +335,7 @@ if __name__ == "__main__":
     db = SqliteDB()
     # ddd = db.admin_updator(407599569, True)
     # ddd = db.admin_updator(407599569, True)
-    ddd = db.get_serveers()
+    ddd = db.server_user_count_updator_test("test", 70)
 
     # ddd = db.get_clients("localhost", 70000)
     print(ddd)

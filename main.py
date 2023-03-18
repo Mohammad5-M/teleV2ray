@@ -92,6 +92,12 @@ async def handle(request):
         return web.Response(status=403)
 
 
+async def handle_post_api_reg_server(request):
+    request_body_dict = await request.json()
+    print(request_body_dict)
+    return web.Response()
+
+
 # Remove webhook and closing session before exiting
 async def shutdown(app):
     logger.info('Shutting down: removing webhook')
@@ -104,6 +110,9 @@ async def setup():
     app = web.Application()
     app.add_routes([web.get('/', hello)])
     app.add_routes([web.get('/download-db', db_downloader)])
+    app.router.add_post('/handle-post-api-reg-server/',
+                        handle_post_api_reg_server)
+
     app.router.add_post('/{token}/', handle)
     app.on_cleanup.append(shutdown)
     return app
@@ -686,6 +695,9 @@ async def get_uri_data_user(message):
         await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
         return
     mandeh = checck[7] - (checck[4] + checck[5])
+
+    if (checck[4] + checck[5]) >= checck[7]:
+        mandeh = 0
     masrafi = (checck[4] + checck[5])
     tarikh = checck[6]
     vasiat = checck[2]
@@ -739,6 +751,9 @@ async def get_uri_data_user(message):
         await bot.send_message(message.from_user.id, "اطلاعات یافت نشد")
         return
     mandeh = checck[7] - (checck[4] + checck[5])
+
+    if (checck[4] + checck[5]) >= checck[7]:
+        mandeh = 0
     masrafi = (checck[4] + checck[5])
     tarikh = checck[6]
     vasiat = checck[2]

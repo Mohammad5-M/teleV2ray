@@ -10,7 +10,7 @@ from uti import time_in_defult_days_milliseconds
 class ServerClass:
     CHECK_POINT = True
 
-    def __init__(self, db: SqliteDB, serv_and_port, host_add, username="admin", password="admin") -> None:
+    def __init__(self, db: SqliteDB, username="admin", password="admin") -> None:
         self.db = db
 
         if self.db.get_serveers() == None:
@@ -29,11 +29,14 @@ class ServerClass:
         self.host_add = ns[7]
 
         if self.user_count >= 70:
-            try:
+            if self.db.get_server_from_id(self.server_id+1) != None:
                 self.db.update_servers_in_use(self.server_id, False)
                 self.db.update_servers_in_use(self.server_id+1, True)
                 self.update_cashed_server()
-            except:
+                self.CHECK_POINT = True
+
+            else:
+                self.CHECK_POINT = False
                 logging.warning("Next server not find")
         logging.info("{} {}".format(self.serv_and_port, self.host_add))
 
@@ -158,7 +161,7 @@ if __name__ == "__main__":
     # resp = requests.post(url=f"http://192.168.1.35:8000/addClients",
     #
     # headers=headers, json=user_config, )
-    print(server.update_cashed_server())
+    # print(server.update_cashed_server())
 # creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 # user_config = gen_user_config_vless_ws(name="telegram_id", email="email11@hhh", uuid="6e52bc35-66ed-42bd-be7f-47bd83f99aca@channel",
 #                                        server_address="localhost", port=80, traffic_limit=70000)

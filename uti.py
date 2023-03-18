@@ -84,6 +84,8 @@ def milliseconds_to_day_from_now(millisec):
 
 def milliseconds_now(millisec):
     presentDate = datetime.now()
+    # if millisec/1000.0 - presentDate <= 0:
+    #     return "پایان رسیده"
     return (datetime.fromtimestamp(millisec/1000.0) - presentDate).__str__().split(".")[0].replace("days", "روز") + "ساعت"
 
 
