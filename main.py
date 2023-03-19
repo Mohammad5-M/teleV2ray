@@ -43,10 +43,10 @@ price = load_config("price.yaml")
 bot = AsyncTeleBot(config["TGToken"], exception_handler=ExceptionHandler())
 
 db = SqliteDB()
-s = ServerClass(db, "local", "hosr_add")
+s = ServerClass(db,)
 
 # webhook data
-WEBHOOK_HOST = 'MammothYellowishArea.salehmast.repl.co'
+WEBHOOK_HOST = 'DirectMistyExabyte.salehmast.repl.co'
 WEBHOOK_PORT = 443  # 443, 80, 88 or 8443 (port need to be 'open')
 WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
 # WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Path to the ssl certificate
@@ -93,9 +93,46 @@ async def handle(request):
 
 
 async def handle_post_api_reg_server(request):
-    request_body_dict = await request.json()
-    print(request_body_dict)
-    return web.Response()
+    try:
+        request_body_dict = await request.json()
+        print(request_body_dict)
+        if request_body_dict["host"]:
+            db.add_row("servers",
+                       (None, request_body_dict["host"], request_body_dict["port"], request_body_dict["user"],
+                        request_body_dict["password"], 0, False, request_body_dict["host_add"],))
+            global s
+            if s.CHECK_POINT is False:
+                s = ServerClass(
+                    db,
+                )
+        return web.Response()
+    except:
+        return web.Response(status=403)
+
+
+async def get_admin(request):
+    try:
+        result = db.get_is_admin(int(request.match_info.get('admin_id')))
+        return web.json_response({"is_admin": bool(result)})
+    except:
+        return web.Response(status=403)
+
+
+async def get_add_admin(request):
+    try:
+        result = db.get_is_admin(
+            int(request.match_info.get('admin_id')))
+        if bool(result):
+            db.admin_updator(
+                int(request.match_info.get('admin_id')), False)
+            return web.Response()
+        if bool(result) == False:
+            db.admin_updator(
+                int(request.match_info.get('admin_id')), True)
+            return web.Response()
+        return web.Response(status=403)
+    except:
+        return web.Response(status=500)
 
 
 # Remove webhook and closing session before exiting
@@ -109,7 +146,10 @@ async def shutdown(app):
 async def setup():
     app = web.Application()
     app.add_routes([web.get('/', hello)])
-    app.add_routes([web.get('/download-db', db_downloader)])
+    app.add_routes([web.get('/get-admin/{admin_id}/', get_admin)])
+    app.add_routes([web.get('/get-add-admin/{admin_id}/', get_add_admin)])
+
+    app.add_routes([web.get('/download-db/', db_downloader)])
     app.router.add_post('/handle-post-api-reg-server/',
                         handle_post_api_reg_server)
 
@@ -851,10 +891,6 @@ async def addserver_admin(message):
         if s.CHECK_POINT is False:
             s = ServerClass(
                 db,
-                f"{host}:{port}",
-                message.text,
-                user,
-                password,
             )
         if db.get_serveer_exist(host) is None:
             if db.get_server_from_in_use(True) is None:
@@ -920,12 +956,12 @@ async def editserver_admin(message):
         print("one")
         global s
         if s.CHECK_POINT is False:
-            s = ServerClass(db, f"{host}:{port}", message.text, user, password)
+            s = ServerClass(db,)
         # if db.get_serveer_exist(host):
         #     return
         one = db.get_server_from_id(ID)
         if one[6] == True:
-            s = ServerClass(db, f"{host}:{port}", message.text, user, password)
+            s = ServerClass(db,)
         db.update_server(ID, host, port, user, password, message.text)
         s.update_cashed_server()
         await bot.reply_to(
