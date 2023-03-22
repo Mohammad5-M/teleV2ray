@@ -82,7 +82,7 @@ class SqliteDB:
         serverName = cdn_add
         print(uuid, port, protocol, network, security, Host, path, serverName)
         if protocol == "vless" or protocol == "trojan":
-            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&security={security}&path={path}&host={Host}&sni={Host}&aid={alterID}#Config CDN {Host}"
+            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&fp=random&alpn=h2,http/1.1&security={security}&path={path}&host={Host}&sni={Host}&aid={alterID}#Config CDN {Host}"
             return one
         elif protocol == "vmess":
             one = conf_ch_cdn(serverName, Host, uuid, network,
@@ -122,7 +122,7 @@ class SqliteDB:
 
         print(uuid, port, protocol, network, security, Host, path, serverName)
         if protocol == "vless" or protocol == "trojan":
-            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&security={security}&path={path}&host={Host}&sni={Host}#Config {Host}"
+            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&fp=random&alpn=h2,http/1.1&security={security}&path={path}&host={Host}&sni={Host}#Config {Host}"
             return one
         elif protocol == "vmess":
             if network == "grpc":
