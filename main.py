@@ -290,7 +290,7 @@ async def callback_query_back_to_home(message):
 async def reset_amount_for_user(call):
     await bot.answer_callback_query(call.id, "یکم صبر کن...")
     call_data = str(call.data).split("_")
-    res = get_doadmin(call.from_user.id, "addAmount")
+    res = get_doadmin_new(call.from_user.id, )
     await bot.delete_message(chat_id=call.from_user.id,
                              message_id=call.message.id)
     if res is {}:
@@ -817,11 +817,11 @@ async def get_uri_data_user(message):
     await bot.send_message(message.from_user.id, text, reply_markup=Admin_start_markup())
 
 
-@ bot.message_handler(is_admin=True, caching_command=["addAmount"],
+@ bot.message_handler(is_admin=True, caching_command_new=["addAmount"],
                       func=lambda message: True)
 async def addAmount_admin(message):
     # print("is here")
-    res = get_doadmin(message.from_user.id, "addAmount")
+    res = get_doadmin_new(message.from_user.id,)
     command = res[b"command"].decode("utf-8")
     do_to_userid = res[b"do_to_userid"].decode("utf-8")
     amount = res[b"amount"].decode("utf-8")
@@ -831,8 +831,8 @@ async def addAmount_admin(message):
     if do_to_userid == "":
         try:
             int(message.text)
-            update_doadmin(message.from_user.id, command, "do_to_userid",
-                           message.text)
+            update_doadmin_new(message.from_user.id,  "do_to_userid",
+                               message.text)
             await bot.reply_to(message, "حالا به چه مقدار؟")
 
         except:
@@ -842,8 +842,8 @@ async def addAmount_admin(message):
         try:
             print(message.text)
             int(message.text)
-            update_doadmin(message.from_user.id, command,
-                           "amount", message.text)
+            update_doadmin_new(message.from_user.id,
+                               "amount", message.text)
             await bot.reply_to(message,
                                "مقدار قبلی را ریست کنم یا اضافه",
                                reply_markup=reset_or_add_admin())

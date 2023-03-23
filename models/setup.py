@@ -82,11 +82,11 @@ class SqliteDB:
         serverName = cdn_add
         print(uuid, port, protocol, network, security, Host, path, serverName)
         if protocol == "vless" or protocol == "trojan":
-            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&fp=random&alpn=h2,http/1.1&security={security}&path={path}&host={Host}&sni={Host}&aid={alterID}#Config CDN {Host}"
+            one = f"{protocol}://{uuid}@{serverName}:{port}?type={network}&fp=random&alpn=h2,http/1.1&security={security}&path={path}&host={Host}&sni={Host}&aid={alterID}#Config {Host}"
             return one
         elif protocol == "vmess":
             one = conf_ch_cdn(serverName, Host, uuid, network,
-                              path, port, f"Config CDN {Host}", Host, security, aid=alterID)
+                              path, port, f"Config {Host}", Host, security, aid=alterID, alpn="h2,http/1.1")
             return one
 
     def link_gen_new(self, json_fild: dict, serverName):

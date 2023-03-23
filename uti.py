@@ -41,10 +41,10 @@ def encode_utf8(sample_string: dict) -> str:
 
 def conf_ch_cdn(add: str,  host: str,
                 id: str, net: str, path: str, port: str,
-                ps: str,  sni: str, tls: str,
+                ps: str,  sni: str, tls: str, fp: str,
                 type: str = "", v: str = "2", aid: str = "0", alpn: str = "http/1.1", scy: str = "auto"):
 
-    r = {"add": add, "aid": aid, "alpn": alpn, "host": host, "id": id, "net": net,
+    r = {"add": add, "aid": aid, "alpn": alpn, "host": host, "id": id, "net": net, "fp": fp,
          "path": path, "port": port, "ps": ps, "scy": scy, "sni": sni, "tls": tls, "type": type, "v": v}
     return f"vmess://{encode_utf8(r)}"
 

@@ -14,8 +14,8 @@ r = redis.Redis(host=config["Redis_host"], port=config["Redis_port"], username=c
 
 def set_doadmin_addAmount(admin_id, do_to_userid="", amount=""):
     ex = timedelta(minutes=10)
-    r.hset(f"addAmount{admin_id}", mapping={"command": "addAmount",
-                                            "do_to_userid": do_to_userid, "amount": amount, })
+    r.hset(admin_id, mapping={"command": "addAmount",
+                              "do_to_userid": do_to_userid, "amount": amount, })
     r.expire(admin_id, ex)
 
 
